@@ -1,0 +1,11 @@
+obstacles.png
+size:256,64
+repeat:none
+barrier
+bounds:2,2,32,32
+bush
+bounds:70,2,32,32
+death_stone
+bounds:104,2,32,32
+puddle
+bounds:36,2,32,32

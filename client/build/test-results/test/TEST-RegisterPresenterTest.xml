@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="RegisterPresenterTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2025-09-14T07:13:11.595Z" hostname="Kriss-MacBook-Air.local" time="0.035">
+  <properties/>
+  <testcase name="registerFailure_serverError()" classname="RegisterPresenterTest" time="0.022"/>
+  <testcase name="registerFailure_timeout()" classname="RegisterPresenterTest" time="0.002"/>
+  <testcase name="registerFailure_invalidInput()" classname="RegisterPresenterTest" time="0.002"/>
+  <testcase name="registerFailure_passwordsMismatch()" classname="RegisterPresenterTest" time="0.001"/>
+  <testcase name="registerFailure_interrupted()" classname="RegisterPresenterTest" time="0.001"/>
+  <testcase name="registerFailure_usernameTaken()" classname="RegisterPresenterTest" time="0.001"/>
+  <testcase name="loginLabelClicked_navigatesToLogin()" classname="RegisterPresenterTest" time="0.001"/>
+  <testcase name="registerSuccess_navigateToRanch()" classname="RegisterPresenterTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

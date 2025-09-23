@@ -1,0 +1,32 @@
+subprojects {
+  apply plugin: "java"
+
+  java {
+    sourceCompatibility = JavaVersion.VERSION_21
+  }
+
+  repositories {
+    mavenCentral()
+      mavenLocal()
+  }
+
+  ext {
+    gdxVersion = '1.12.1'
+  }
+
+  dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.12.1'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testImplementation 'org.mockito:mockito-core:5.6.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:5.6.0'
+    implementation 'io.socket:socket.io-client:2.0.1'
+  }
+
+  test {
+    useJUnitPlatform()
+      testLogging {
+        events "passed", "skipped", "failed"
+      }
+  }
+}

@@ -1,0 +1,7 @@
+icons.png
+size:32,16
+repeat:none
+prestige_icon
+bounds:16,0,16,16
+coin_icon
+bounds:0,0,16,16
