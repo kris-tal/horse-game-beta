@@ -1,35 +1,31 @@
 package core;
 
 import com.badlogic.gdx.Game;
+import services.managers.ConnectionManagerPort;
+import services.managers.SessionManagerPort;
+import services.media.AudioService;
 import views.login.LoginScreen;
-import views.register.RegisterScreen;
-import services.managers.ResourceManager;
 
 public class HorseGame extends Game {
-    private ResourceManager resourceManager;
+    private ConnectionManagerPort connectionManager;
+    private SessionManagerPort sessionManager;
+    private AudioService audio;
     private LoginScreen loginScreen;
-    private RegisterScreen registerScreen;
-    //private RaceScreen raceScreen;
+
+    public HorseGame(SessionManagerPort sessionManager, ConnectionManagerPort connectionManager, AudioService audio) {
+        this.sessionManager = sessionManager;
+        this.connectionManager = connectionManager;
+        this.audio = audio;
+        loginScreen = new LoginScreen(this, connectionManager, audio);
+    }
 
     @Override
     public void create() {
-        //resourceManager = new ResourceManager();
-        loginScreen = new LoginScreen(this);
-        registerScreen = new RegisterScreen(this);
         setScreen(loginScreen);
-    }
-
-    public void showLoginScreen() {
-        setScreen(loginScreen);
-    }
-
-    public void showRegisterScreen() {
-        setScreen(registerScreen);
     }
 
     @Override
     public void dispose() {
-        if(loginScreen != null) loginScreen.dispose();
-        if(registerScreen != null) registerScreen.dispose();
+        if (loginScreen != null) loginScreen.dispose();
     }
 }

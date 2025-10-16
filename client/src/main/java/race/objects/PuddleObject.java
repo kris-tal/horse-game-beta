@@ -18,6 +18,6 @@ public class PuddleObject extends MapObject {
 
     @Override
     public boolean isObstacle() {
-        return true;
+        return false;
     }
 }

@@ -6,12 +6,17 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from database.setup import DEFAULT_HORSE_TYPES
 from managers.file_manager import create_user_files
+from routes.shop import initialize_shop
 from routes.horses import add_horse
 
 profile_bp = Blueprint('profile', __name__)
 
 def setup_new_account(user_id):
-    create_user_files(user_id=user_id)
+    try:
+        create_user_files(user_id=user_id)
+    except FileNotFoundError:
+        initialize_shop()
+        create_user_files(user_id=user_id)
     for horse in DEFAULT_HORSE_TYPES:
         if horse["default"]:
             add_horse(user_id, horse["id"])

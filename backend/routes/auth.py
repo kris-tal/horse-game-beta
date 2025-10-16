@@ -21,7 +21,7 @@ def signup():
     data = request.get_json()
 
     if User.query.filter_by(username=data['username']).first():
-        return jsonify({"msg": "Username already exists"}), 400
+        return jsonify({"msg": "Username already exists"}), 409
 
     if len(data['username']) > 80:
         return jsonify({"msg": "Username is too long!"}), 400

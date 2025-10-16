@@ -1,22 +1,24 @@
 package views.login;
 
-import services.auth.AuthService;
 import data.auth.AuthCode;
-import services.managers.SessionManager;
+import services.auth.AuthService;
+import services.managers.SessionManagerPort;
 
 public class LoginPresenter {
     private final LoginView view;
     private final AuthService authService;
+    private final SessionManagerPort sessionManager;
 
-    public LoginPresenter(LoginView view, AuthService authService) {
+    public LoginPresenter(LoginView view, AuthService authService, SessionManagerPort sessionManager) {
         this.view = view;
         this.authService = authService;
+        this.sessionManager = sessionManager;
     }
 
     public void onLoginClicked(String username, String password) {
         var result = authService.login(username, password);
         if (result.returnedCode == AuthCode.SUCCESS) {
-            SessionManager.getInstance().startSession(result.token);
+            sessionManager.startSession(result.token);
             view.showLoginSuccess();
             view.navigateToRanch();
         } else {

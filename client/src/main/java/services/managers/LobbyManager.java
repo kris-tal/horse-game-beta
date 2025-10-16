@@ -1,89 +1,92 @@
 package services.managers;
 
-import com.badlogic.gdx.Gdx;
+import data.lobby.LobbyInfo;
 import data.lobby.PlayerInfoClient;
+import data.race.GameMap;
+import data.race.PlayerProgressResponse;
+import race.config.ConfigModule;
+import race.config.GameConfigValues;
+import race.map.RandomMapGenerator;
+import services.listeners.LobbyListener;
 import services.lobby.LobbyService;
 import services.lobby.LobbyServiceImpl;
+import services.profile.ProfileServiceImpl;
 
 import java.util.HashMap;
-import java.util.List;
 
-public class LobbyManager {
-    private static LobbyManager instance;
+public class LobbyManager implements LobbyListener {
+    private final SessionManagerPort sessionManager;
+    private final ConnectionManagerPort connectionManager;
     private final LobbyService service;
     private LobbyInfo currentLobby;
     private LobbyStateListener stateListener;
     private LobbyConnectionListener connectionListener;
 
     /* Interface responsible for callback from server responses,
-     Callback is designed to communicate with WaitingLobbyPanel*/
+    Callback is designed to communicate with WaitingLobbyPanel*/
     public interface LobbyStateListener {
         void onLobbyInitialized();
+
         void onPlayersUpdated();
-        void onLobbyStarted();
+
+        void onLobbyStarted(String data);
+
         void onLobbyClosed();
     }
 
     /* Interface responsible for callback from server responses,
-     Callback is designed to communicate with JoinLobbyPanel*/
+    Callback is designed to communicate with JoinLobbyPanel*/
     public interface LobbyConnectionListener {
         void onLobbyJoined(boolean success);
     }
 
-    private LobbyManager() {
-        service = new LobbyServiceImpl();
-    }
-
-    public static synchronized LobbyManager getInstance() {
-        if (instance == null) {
-            instance = new LobbyManager();
-        }
-        return instance;
+    public LobbyManager(SessionManagerPort sessionManager, ConnectionManagerPort connectionManager) {
+        this.sessionManager = sessionManager;
+        this.service = new LobbyServiceImpl(sessionManager, connectionManager);
+        this.connectionManager = connectionManager;
+        this.connectionManager.setLobbyListener(this);
     }
 
     public void createLobby() {
-        leaveLobby();
+        if (currentLobby != null) {
+            return;
+        }
+        connectionManager.closeConnection();
         String code = service.createLobby();
         if (code != null) {
             currentLobby = new LobbyInfo(code);
-            Gdx.app.log("Lobby", "Created lobby! " + code);
             service.joinLobby(code);
         }
     }
 
     public void joinLobby(String lobbyCode) {
         if (currentLobby != null) {
-            service.closeConnection();
+            leaveLobby();
+            return;
         }
 
-        // Create lobby info immediately (optimistic)
-        // This will be validated by the async connection result
         currentLobby = new LobbyInfo(lobbyCode);
-
         boolean success = service.joinLobby(lobbyCode);
         if (!success) {
-            // If immediate failure, clear the lobby
             currentLobby = null;
             if (connectionListener != null) {
                 connectionListener.onLobbyJoined(false);
             }
         }
-        // If success, wait for async callback to confirm
     }
 
-    public boolean startLobby() {
+    public void startLobby() {
         if (currentLobby == null) {
-            Gdx.app.log("Lobby", "No current lobby to start!");
-            return false;
+            return;
         }
 
-        if (service.startLobby()) {
-            Gdx.app.log("Lobby", "Started lobby successfully");
-            return true;
-        } else {
-            Gdx.app.log("Lobby", "Failed to start lobby");
-            return false;
-        }
+        GameConfigValues configValues = ConfigModule.getConfigValues();
+        GameMap map = new RandomMapGenerator().generateMap(configValues.getDefaultLanes(), configValues.getRaceLength());
+        service.startLobby(currentLobby.getLobbyCode(), map);
+    }
+
+    public void setCurrentLobby(LobbyInfo lobby) {
+        this.currentLobby = lobby;
     }
 
     public LobbyInfo getCurrentLobby() {
@@ -94,29 +97,19 @@ public class LobbyManager {
         if (currentLobby != null) {
             currentLobby = null;
         }
-        service.closeConnection();
+        connectionManager.closeConnection();
     }
 
-    public void updatePlayers(HashMap<String, PlayerInfoClient> newPlayers) {
-        if (currentLobby != null) {
-            currentLobby.setPlayers(newPlayers);
-            if (stateListener != null) {
-                stateListener.onPlayersUpdated();
+    public void updateProgress(PlayerProgressResponse progress) {
+        if (currentLobby == null || progress == null || progress.getDistances() == null) return;
+        for (PlayerProgressResponse.PlayerProgress data : progress.getDistances()) {
+            PlayerInfoClient player = currentLobby.getPlayer(data.getUsername());
+            if (player != null) {
+                player.setProgress(data.getProgress());
             }
         }
-    }
-
-    public void onLobbyStarted() {
         if (stateListener != null) {
-            stateListener.onLobbyStarted();
-        }
-    }
-
-    public void onLobbyClosed() {
-        // FIXED: Clear lobby when it's closed
-        currentLobby = null;
-        if (stateListener != null) {
-            stateListener.onLobbyClosed();
+            stateListener.onPlayersUpdated();
         }
     }
 
@@ -129,9 +122,11 @@ public class LobbyManager {
     }
 
     public boolean isCurrentUserCreator() {
-        if (currentLobby == null) return false;
+        if (currentLobby == null) {
+            return false;
+        }
 
-        String username = ((LobbyServiceImpl) service).getCurrentUserUsername();
+        String username = new ProfileServiceImpl(sessionManager).getUsername();
         if (username == null) return false;
 
         PlayerInfoClient player = currentLobby.getPlayer(username);
@@ -140,6 +135,32 @@ public class LobbyManager {
         return player.isCreator();
     }
 
+    @Override
+    public void onPlayerListChanged(HashMap<String, PlayerInfoClient> newPlayers) {
+        if (getCurrentLobby() != null) {
+            currentLobby.setPlayers(newPlayers);
+            if (stateListener != null) {
+                stateListener.onPlayersUpdated();
+            }
+        }
+    }
+
+    @Override
+    public void onLobbyStarted(String data) {
+        if (stateListener != null) {
+            stateListener.onLobbyStarted(data);
+        }
+    }
+
+    @Override
+    public void onLobbyClosed() {
+        currentLobby = null;
+        if (stateListener != null) {
+            stateListener.onLobbyClosed();
+        }
+    }
+
+    @Override
     public void onLobbyJoined(boolean success) {
         if (connectionListener != null) {
             connectionListener.onLobbyJoined(success);
@@ -149,40 +170,20 @@ public class LobbyManager {
             if (stateListener != null) {
                 stateListener.onLobbyInitialized();
             }
-            Gdx.app.log("Lobby", "Successfully joined lobby: " +
-                    (currentLobby != null ? currentLobby.getLobbyCode() : "unknown"));
         } else {
-            Gdx.app.error("Lobby", "Failed to join lobby - clearing lobby info");
             currentLobby = null;
         }
     }
 
-    public static class LobbyInfo {
-        private final String lobbyCode;
-        private HashMap<String, PlayerInfoClient> players = new HashMap<>();
+    @Override
+    public void onLobbyCreated(String lobbyCode) {
+        // Handle lobby creation confirmation if needed
+    }
 
-        public LobbyInfo(String lobbyCode) {
-            this.lobbyCode = lobbyCode;
-        }
-
-        public String getLobbyCode() {
-            return lobbyCode;
-        }
-
-        public HashMap<String, PlayerInfoClient> getPlayers() {
-            return players;
-        }
-
-        public void setPlayers(HashMap<String, PlayerInfoClient> players) {
-            this.players = players;
-        }
-
-        public int getPlayerCount() {
-            return players.size();
-        }
-
-        public PlayerInfoClient getPlayer(String username) {
-            return players.get(username);
+    @Override
+    public void onLobbyInitialized() {
+        if (stateListener != null) {
+            stateListener.onLobbyInitialized();
         }
     }
 }

@@ -14,7 +14,10 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=False, nullable=True)
     password_hash = db.Column(db.String(128), nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
-    money = db.Column(db.Integer, default=os.getenv("STARTUP_MONEY"))
+    money = db.Column(
+        db.Integer,
+        default=int(os.getenv("STARTUP_MONEY", "0"))
+    )
     prestige = db.Column(db.Integer, default=0)
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -27,10 +30,11 @@ class Horse(db.Model):
     __tablename__ = 'horses'
     id = db.Column(db.Integer, primary_key=True)
     name_id = db.Column(db.Integer, db.ForeignKey('horse_types.id'), nullable=False)
-    level = db.Column(db.Integer, default=1)
+    level = db.Column(db.Integer, default=0)
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     owner = db.relationship('User', backref=db.backref('horses', cascade='all, delete'))
     training_points = db.Column(db.Integer, default=0)
+    longest_run_distance = db.Column(db.Integer, default=0)
 
     def __repr__(self):
         return f'<Horse {self.name} ({self.level})>'

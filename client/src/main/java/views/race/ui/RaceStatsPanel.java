@@ -1,8 +1,8 @@
 package views.race.ui;
 
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import views.common.Panel;
-import views.common.UIFactory;
+import views.common.ui.Panel;
+import views.common.ui.UIFactory;
 
 public class RaceStatsPanel extends Panel {
     private Label distanceLabel;
@@ -10,6 +10,7 @@ public class RaceStatsPanel extends Panel {
 
     public RaceStatsPanel(float width, float height) {
         super(width, height);
+        build();
     }
 
     @Override

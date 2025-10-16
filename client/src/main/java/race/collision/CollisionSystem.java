@@ -2,11 +2,14 @@ package race.collision;
 
 import data.race.GameMap;
 import race.Player;
+import race.objects.BoostObject;
+import race.objects.CoinObject;
+import race.objects.EmptyObject;
 
 public class CollisionSystem {
 
     public void checkCollisions(Player player, GameMap map) {
-        int col = Math.round(player.getCol());
+        int col = (int) Math.round(Math.ceil(player.getCol()));
 
         if (col < map.getLength()) {
             int lane = player.getLane();
@@ -14,8 +17,15 @@ public class CollisionSystem {
 
             obj.onCollision(player);
 
-            if (obj instanceof race.objects.CoinObject coin && coin.isTaken()) {
-                map.setObject(lane, col, new race.objects.EmptyObject());
+            if (obj.isObstacle() && !player.isAlive()) {
+                return;
+            }
+
+            if (obj instanceof CoinObject coin && coin.isTaken()) {
+                map.setObject(lane, col, new EmptyObject());
+            }
+            if (obj instanceof BoostObject) {
+                map.setObject(lane, col, new EmptyObject());
             }
         }
     }

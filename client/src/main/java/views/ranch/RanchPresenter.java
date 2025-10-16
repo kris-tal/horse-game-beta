@@ -1,16 +1,10 @@
 package views.ranch;
 
-import views.common.MenuContext;
-import views.common.Panel;
-import views.ranch.race.WaitingLobbyPanel;
-import views.ranch.race.JoinLobbyPanel;
+import views.common.context.MenuContext;
+import views.common.ui.Panel;
+import views.race.menu.JoinLobbyPanel;
+import views.race.menu.WaitingLobbyPanel;
 
-/*
-    TODO:
-    * Change LobbyMode.CREATE to LobbyMode.WAITING
-    * Make the steering for lobby switching be outside of the WAITING section
-    * Make WAITING
- */
 
 public class RanchPresenter {
     private final RanchView view;
@@ -31,15 +25,10 @@ public class RanchPresenter {
         view.showPanel(panel);
     }
 
-    public void onRankingButtonClicked(Panel panel) {
-        view.hideAllPanels();
-        view.showPanel(panel);
-    }
-
     public void onSingleplayerClicked() {
         menuContext.setRaceMode(MenuContext.RaceMode.SINGLEPLAYER);
         view.hideAllPanels();
-        view.navigateToRace();
+        view.navigateToRace("");
     }
 
     public void onMultiplayerClicked(Panel panel) {
@@ -49,9 +38,9 @@ public class RanchPresenter {
     }
 
     public void onCreateLobbyClicked(WaitingLobbyPanel panel) {
-        panel.refresh();
         menuContext.setLobbyMode(MenuContext.LobbyMode.CREATE);
         view.hideAllPanels();
+        panel.createLobby();
         view.showPanel(panel);
     }
 
@@ -59,5 +48,9 @@ public class RanchPresenter {
         menuContext.setLobbyMode(MenuContext.LobbyMode.JOIN);
         view.hideAllPanels();
         view.showPanel(panel);
+    }
+
+    public void onExitPressed() {
+        view.showExitConfirmation();
     }
 }

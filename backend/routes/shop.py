@@ -1,14 +1,13 @@
 from flask import Blueprint, request, jsonify
 
-from database.models import HorseTypes, db
+from database.models import HorseTypes, Horse, db
 from managers.identity_manager import get_user
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from managers.file_manager import get_user_file, DataType, create_default_file, save_user_file
+from managers.file_manager import get_user_file, DataType, create_default_file, save_user_file, create_user_files
 from routes.horses import add_horse, upgrade_user_horse
 
 shop_bp = Blueprint('shop', __name__)
 
-# Function called to create a default user file
 def initialize_shop():
     horses_to_buy = []
     upgrades = []
@@ -20,7 +19,6 @@ def initialize_shop():
                 "price": horse.price
             })
         else:
-            # Not owned → available for purchase
             horses_to_buy.append({
                 "id": horse.id,
                 "price": horse.price
@@ -34,7 +32,6 @@ def initialize_shop():
     create_default_file(DataType.Shop, shop_data)
 
 
-# Get info about ones' stable
 @shop_bp.route('/shop', methods=['GET'])
 @jwt_required()
 def shop_listing():
@@ -43,10 +40,18 @@ def shop_listing():
     if status != 200:
         return user, status
 
-    shop_data = get_user_file(user.id, DataType.Shop)
-    return shop_data, 200
+    owned = {h.name_id for h in Horse.query.filter_by(owner_id=user.id).all()}
+    horses_to_buy = []
+    upgrades = []
+    for t in HorseTypes.query.all():
+        entry = {"id": t.id, "price": t.price}
+        if t.id in owned:
+            upgrades.append(entry)
+        else:
+            horses_to_buy.append(entry)
 
-#Make purchase
+    return {"horses": horses_to_buy, "upgrades": upgrades}, 200
+
 @shop_bp.route('/shop', methods=['POST'])
 @jwt_required()
 def buy():
@@ -57,47 +62,27 @@ def buy():
 
     data = request.get_json()
     if not data or "id" not in data:
-        return jsonify({"money":user.money, "success": False, "message": "Invalid query: missing id"}), 401
+        return jsonify({"money": user.money, "success": False, "message": "Invalid query: missing id"}), 401
 
     horse_id = data["id"]
+    t = HorseTypes.query.filter_by(id=horse_id).first()
+    if not t:
+        return jsonify({"money": user.money, "success": False, "message": "Invalid horse id"}), 404
 
-    # Load the user's shop file
-    shop_data = get_user_file(user.id, DataType.Shop)
+    price = t.price
+    owned = Horse.query.filter_by(owner_id=user.id, name_id=horse_id).first() is not None
 
-    if not shop_data:
-        return jsonify({"success": False, "message": "Shop data not found"}), 404
+    if user.money < price:
+        return jsonify({"money": user.money, "success": False, "message": "Insufficient funds"}), 400
 
-    # --- 1) Check if horse is in "horses" (buy new) ---
-    for horse in shop_data.get("horses", []):
-        if horse["id"] == horse_id:
-            # Check if funds are sufficient, purchase success is based on it
-            if user.money < horse["price"]:
-                return jsonify({"money":user.money, "success": False, "message": "Insufficient funds"}), 400
-
-            user.money -= horse["price"]
-            add_horse(user.id, horse_id)
-            shop_data["horses"] = [h for h in shop_data["horses"] if h["id"] != horse_id]
-            shop_data["upgrades"].append({
-                "id": horse_id,
-                "price": horse["price"]
-            })
-            db.session.commit()
-            money = user.money
-            save_user_file(user.id, DataType.Shop, shop_data)
-            return jsonify({"money":money, "success": True, "message": "Horse purchased"}), 200
-
-    # --- 2) Check if horse is in "upgrades" ---
-    for upgrade in shop_data.get("upgrades", []):
-        if upgrade["id"] == horse_id:
-            if user.money < upgrade["price"]:
-                return jsonify({"money":user.money, "success": False, "message": "Insufficient funds"}), 400
-            user.money -= upgrade["price"]
-            money = user.money
-            upgrade_user_horse(user.id, horse_id)
-            db.session.commit()
-            return jsonify({"money":money, "success": True, "message": "Horse upgraded"}), 200
-
-    # --- 3) Not found in either ---
-    return jsonify({"money":user.money, "success": False, "message": "Invalid query: invalid id"}), 401
+    user.money -= price
+    if owned:
+        upgrade_user_horse(user.id, horse_id)
+        db.session.commit()
+        return jsonify({"money": user.money, "success": True, "message": "Horse upgraded"}), 200
+    else:
+        add_horse(user.id, horse_id)
+        db.session.commit()
+        return jsonify({"money": user.money, "success": True, "message": "Horse purchased"}), 200
 
 

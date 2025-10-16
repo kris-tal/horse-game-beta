@@ -1,7 +1,7 @@
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import views.common.MenuContext;
-import views.common.Panel;
+import views.common.context.MenuContext;
+import views.common.ui.Panel;
 import views.ranch.RanchPresenter;
 import views.ranch.RanchView;
 
@@ -40,19 +40,11 @@ class RanchPresenterTest {
     }
 
     @Test
-    void rankingButton_showsRankingPanel() {
-        presenter.onRankingButtonClicked(dummyPanel);
-        verify(view).hideAllPanels();
-        verify(view).showPanel(dummyPanel);
-        verifyNoMoreInteractions(view, menuContext);
-    }
-
-    @Test
     void singleplayer_setsModeAndShowsPanel() {
         presenter.onSingleplayerClicked();
         verify(menuContext).setRaceMode(MenuContext.RaceMode.SINGLEPLAYER);
         verify(view).hideAllPanels();
-        verify(view).navigateToRace();
+        verify(view).navigateToRace("");
         verifyNoMoreInteractions(view, menuContext);
     }
 

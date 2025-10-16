@@ -1,42 +1,59 @@
 package race.state;
 
-import race.Player;
 import data.race.GameMap;
+import race.Player;
 
 public class GameStateManager {
-    private boolean raceFinished = false;
-    private boolean playerDead = false;
-    private boolean raceCompleted = false;
+
+    public enum GameState {
+        RUNNING,
+        COMPLETED,
+        PLAYER_DEAD,
+        FINISHED
+    }
+
+    private GameState currentState = GameState.RUNNING;
 
     public void update(Player player, GameMap map) {
-        if (raceFinished) return;
-
-        if (!player.isAlive() && !playerDead) {
-            playerDead = true;
-            raceFinished = true;
+        if (currentState == GameState.FINISHED
+                || currentState == GameState.COMPLETED
+                || currentState == GameState.PLAYER_DEAD) {
+            return;
         }
 
-        if (player.getCol() >= map.getLength() && !raceCompleted) {
-            raceCompleted = true;
-            raceFinished = true;
+        if (player.isRaceCompleted() || player.getCol() >= map.getLength()) {
+            currentState = GameState.COMPLETED;
+            return;
+        }
+
+        if (!player.isAlive()) {
+            currentState = GameState.PLAYER_DEAD;
+            return;
         }
     }
 
     public boolean isRaceFinished() {
-        return raceFinished;
+        return currentState == GameState.COMPLETED
+                || currentState == GameState.PLAYER_DEAD;
     }
 
     public boolean isPlayerDead() {
-        return playerDead;
+        return currentState == GameState.PLAYER_DEAD;
     }
 
     public boolean isRaceCompleted() {
-        return raceCompleted;
+        return currentState == GameState.COMPLETED;
+    }
+
+    public GameState getCurrentState() {
+        return currentState;
     }
 
     public void reset() {
-        raceFinished = false;
-        playerDead = false;
-        raceCompleted = false;
+        currentState = GameState.RUNNING;
+    }
+
+    public void completeRace() {
+        currentState = GameState.COMPLETED;
     }
 }

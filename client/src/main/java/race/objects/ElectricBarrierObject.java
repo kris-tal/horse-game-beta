@@ -35,9 +35,4 @@ public class ElectricBarrierObject extends MapObject {
         return true;
     }
 
-    public boolean isDestroyed() {
-        return destroyed;
-    }
-
-
 }

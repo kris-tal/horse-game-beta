@@ -1,3 +1,4 @@
+// java
 package views.login;
 
 import com.badlogic.gdx.Gdx;
@@ -14,21 +15,31 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import core.HorseGame;
-import views.common.UIStyles;
+import data.race.EquippedHorseService;
+import services.auth.AuthServiceImpl;
+import services.managers.ConnectionManagerPort;
+import services.managers.ResourceManager;
+import services.managers.SessionManager;
+import services.managers.SessionManagerPort;
+import services.media.AudioService;
+import views.common.ui.UIFactory;
 import views.ranch.RanchScreen;
 import views.register.RegisterScreen;
-import services.auth.AuthServiceImpl;
-import views.common.UIFactory;
-import services.managers.ResourceManager;
 
 public class LoginScreen implements Screen, LoginView {
     private final HorseGame game;
     private final LoginPresenter presenter;
+    private final ConnectionManagerPort connectionManager;
+    private final SessionManagerPort sessionManager;
+    private final AudioService audio;
     private Stage stage;
 
-    public LoginScreen(HorseGame game) {
+    public LoginScreen(HorseGame game, ConnectionManagerPort connectionManager, AudioService audio) {
         this.game = game;
-        this.presenter = new LoginPresenter(this, new AuthServiceImpl());
+        this.sessionManager = new SessionManager();
+        this.connectionManager = connectionManager;
+        this.presenter = new LoginPresenter(this, new AuthServiceImpl(), sessionManager);
+        this.audio = audio;
     }
 
     @Override
@@ -43,11 +54,9 @@ public class LoginScreen implements Screen, LoginView {
         float mediumPadding = screenHeight / 20f;
         float smallPadding = screenHeight / 40f;
 
-        //loading assets
         Texture bgTexture = ResourceManager.authScreenBgTexture;
         Texture logoTexture = ResourceManager.logoTexture;
 
-        //staging bg
         Image background = new Image(bgTexture);
         background.setFillParent(true);
         stage.addActor(background);
@@ -56,20 +65,17 @@ public class LoginScreen implements Screen, LoginView {
         root.setFillParent(true);
         stage.addActor(root);
 
-        //staging logo
         Image logo = new Image(logoTexture);
         logo.setScaling(Scaling.fit);
         float logoWidth = screenWidth / 2f;
         float logoHeight = logoTexture.getHeight() * (logoWidth / logoTexture.getWidth());
 
-        //username / password field
         TextField usernameField = UIFactory.createTextField("username");
         TextField passwordField = UIFactory.createTextField("password");
 
         passwordField.setPasswordMode(true);
         passwordField.setPasswordCharacter('*');
 
-        //login button
         TextButton loginButton = UIFactory.createTextButton("log in");
         loginButton.addListener(new ClickListener() {
             @Override
@@ -78,7 +84,6 @@ public class LoginScreen implements Screen, LoginView {
             }
         });
 
-        //register label
         Label registerLabel = UIFactory.createLabel("I don't have an account..");
         registerLabel.addListener(new ClickListener() {
             @Override
@@ -98,21 +103,18 @@ public class LoginScreen implements Screen, LoginView {
             }
         });
 
-        // Jesteśmy w polu username + klikamy Enter = skaczemy do pola password
         usernameField.setTextFieldListener((textField, c) -> {
             if (c == '\r' || c == '\n') {
                 textField.getStage().setKeyboardFocus(passwordField);
             }
         });
 
-        // Jesteśmy w polu password + klikamy Enter = próba logowania
         passwordField.setTextFieldListener((textField, c) -> {
             if (c == '\r' || c == '\n') {
                 presenter.onLoginClicked(usernameField.getText(), passwordField.getText());
             }
         });
 
-        //layout
         float fieldWidth = Gdx.graphics.getWidth() / 3f;
         float fieldHeight = Gdx.graphics.getHeight() / 20f;
 
@@ -134,25 +136,24 @@ public class LoginScreen implements Screen, LoginView {
         stage.draw();
     }
 
-    // LoginView methods
     @Override
     public void showLoginSuccess() {
-        ResourceManager.horseSound1.play();
+        audio.playSuccessSound();
     }
 
     @Override
     public void showLoginFailure() {
-        ResourceManager.snortSound.play();
+        audio.playFailureSound();
     }
 
     @Override
     public void navigateToRegister() {
-        game.setScreen(new RegisterScreen(game));
+        game.setScreen(new RegisterScreen(game, connectionManager, audio));
     }
 
     @Override
     public void navigateToRanch() {
-        game.setScreen(new RanchScreen(game));
+        game.setScreen(new RanchScreen(game, sessionManager, connectionManager, new EquippedHorseService(sessionManager)));
     }
 
     @Override
@@ -160,24 +161,26 @@ public class LoginScreen implements Screen, LoginView {
         Gdx.app.exit();
     }
 
-    // LibGDX things
     @Override
     public void resize(int width, int height) {
         stage.getViewport().update(width, height, true);
     }
 
     @Override
-    public void pause() {}
+    public void pause() {
+    }
 
     @Override
-    public void resume() {}
+    public void resume() {
+    }
 
     @Override
-    public void hide() {}
+    public void hide() {
+    }
 
     @Override
     public void dispose() {
-        if(stage != null) {
+        if (stage != null) {
             stage.dispose();
         }
     }

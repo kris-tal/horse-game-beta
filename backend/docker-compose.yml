@@ -6,6 +6,14 @@ services:
     container_name: kontra_web
     ports:
       - "4000:4000"
-    env_file: .env
+    environment:
+      - JWT_SECRET_KEY=devsecret
+      - DATABASE_URL=sqlite:////data/dev.db
+      - STARTUP_MONEY=3000
+      - FLASK_ENV=development
     volumes:
       - .:/app
+      - dbdata:/data
+
+volumes:
+  dbdata:

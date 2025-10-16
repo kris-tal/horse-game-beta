@@ -1,155 +1,171 @@
 package race;
 
 import data.horse.HorseType;
+import race.state.SprintState;
+import race.strategy.player.PlayerMovementStrategy;
+import race.strategy.player.PlayerVisionStrategy;
+import race.strategy.player.StatusEffectManager;
+import race.strategy.sprint.SprintManager;
+import race.strategy.sprint.SprintStrategy;
 
 public class Player {
     private final HorseType horseType;
     private int lane;
     private float col = 0f;
     private int coins = 0;
-    private float baseSpeed;
+    private final float baseSpeed;
     private boolean alive = true;
+    private boolean immortal;
+    private boolean raceCompleted = false;
 
-    private boolean sprinting = false;
-    private float sprintTimeLeft = 0f;
-    private float sprintDuration = 2f;
-    private float sprintCooldown = 10f;
-    private float cooldownTimer = 0f;
-    private float slowDownTimeLeft = 0f;  // czas spowolnienia
+    private final SprintState sprintState;
+    private final SprintStrategy sprintStrategy;
+    private final PlayerMovementStrategy movementStrategy;
+    private final PlayerVisionStrategy visionStrategy;
+    private final SprintManager sprintManager;
+    private final StatusEffectManager statusEffectManager;
+
+    // Status effects
+    private float slowDownTimeLeft = 0f;
     private float slowDownFactor = 0.5f;
-    // Widoczność
     private float visionLimitTime = 0f;
     private float visionLimitColsLeft = 0f;
 
-    public Player(HorseType horseType, int startingLane, float speed) {
+    public Player(HorseType horseType, int startingLane, float speed,
+                  SprintStrategy sprintStrategy, PlayerMovementStrategy movementStrategy,
+                  PlayerVisionStrategy visionStrategy, SprintManager sprintManager,
+                  StatusEffectManager statusEffectManager,
+                  float sprintDuration, float sprintCooldown,
+                  boolean immortal) {
         this.horseType = horseType;
-        lane = startingLane;
+        this.lane = startingLane;
         this.baseSpeed = speed;
-    }
-
-    //Ruch
-    public void moveUp() {
-        if (lane < 2)
-            lane++;
-    }
-
-    public void slowDown(float seconds) {
-        slowDownTimeLeft = seconds;
-    }
-
-    public void moveDown() {
-        if (lane > 0)
-            lane--;
+        this.sprintStrategy = sprintStrategy;
+        this.movementStrategy = movementStrategy;
+        this.visionStrategy = visionStrategy;
+        this.sprintManager = sprintManager;
+        this.statusEffectManager = statusEffectManager;
+        this.sprintState = new SprintState(sprintDuration, sprintCooldown);
+        this.immortal = immortal;
     }
 
     public void update(float delta) {
-        // update sprint
-        if (sprinting) {
-            sprintTimeLeft -= delta;
-            if (sprintTimeLeft <= 0f) {
-                sprinting = false;
-                cooldownTimer = sprintCooldown;
-            }
-        }
-
-        // update cooldown sprintu
-        if (cooldownTimer > 0f) {
-            cooldownTimer -= delta;
-        }
-
-        // update widoczności
-        if (visionLimitTime > 0f) {
-            visionLimitTime -= delta;
-        }
-
-        // update spowolnienia
-        float currentSpeed = baseSpeed;
-        if (slowDownTimeLeft > 0f) {
-            currentSpeed *= slowDownFactor;
-            slowDownTimeLeft -= delta;
-        }
-
-        if (sprinting) currentSpeed *= 2.0f;  // sprint
-
-        float prevCol = col;
-        col += delta * currentSpeed;
-
-        if (visionLimitColsLeft > 0f) {
-            float advancedCols = Math.max(0f, col - prevCol);
-            visionLimitColsLeft = Math.max(0f, visionLimitColsLeft - advancedCols);
-        }
+        if (!alive) return;
+        sprintManager.updateSprint(this, delta);
+        movementStrategy.updateMovement(this, delta);
+        visionStrategy.updateVision(this, delta);
+        statusEffectManager.updateStatusEffects(this, delta);
     }
 
+    // Sterowanie
+    public void moveUp() {
+        if (lane < 2) lane++;
+    }
 
-    // Sprint
+    public void moveDown() {
+        if (lane > 0) lane--;
+    }
+
+    // Sprint API
     public void startSprint() {
-        if (!sprinting && cooldownTimer <= 0f) {
-            sprinting = true;
-            sprintTimeLeft = sprintDuration;
-        }
-    }
-
-    public boolean isSprinting() {
-        return sprinting;
+        sprintManager.startSprint(this);
     }
 
     public boolean canSprint() {
-        return !sprinting && cooldownTimer <= 0f;
+        return sprintManager.canSprint(this);
     }
 
     public float getSprintCooldownProgress() {
-        float denom = sprintCooldown <= 0f ? 1f : sprintCooldown;
-        return Math.max(0f, cooldownTimer) / denom;
+        return sprintStrategy.getSprintCooldownProgress(sprintState.getCooldownTimer(), sprintState.getCooldown());
+    }
+
+    public boolean isSprinting() {
+        return sprintState.isSprinting();
     }
 
     public boolean isInSprintCooldown() {
-        return !sprinting && cooldownTimer > 0f;
-    }
-
-    public float getSprintTimeLeft() {
-        return sprintTimeLeft;
-    }
-
-    public float getSprintDuration() {
-        return sprintDuration;
-    }
-
-    public float getSprintCooldown() {
-        return sprintCooldown;
+        return sprintState.isInCooldown();
     }
 
     public void resetSprint() {
-        sprinting = false;
-        cooldownTimer = sprintCooldown;
+        sprintManager.resetSprint(this);
     }
 
     public void makeSprintAvailable() {
-        sprinting = false;
-        cooldownTimer = 0f;
+        sprintManager.makeSprintAvailable(this);
     }
 
-    // Spowolnienie przez przeszkody
+    public float getSprintTimeLeft() {
+        return sprintState.getTimeLeft();
+    }
+
+    public float getSprintDuration() {
+        return sprintState.getDuration();
+    }
+
+    public float getSprintCooldown() {
+        return sprintState.getCooldown();
+    }
+
+    public float getCooldownTimer() {
+        return sprintState.getCooldownTimer();
+    }
+
+    public SprintStrategy getSprintStrategy() {
+        return sprintStrategy;
+    }
+
+    // Efekty
+    public void slowDown(float seconds) {
+        statusEffectManager.applySlowDown(this, seconds);
+    }
+
     public void slowDown() {
-        slowDown(1.5f);
-    }
-
-    // Widoczność w krzakach
-    public void limitVision(float seconds) {
-        visionLimitTime = seconds;
-    }
-
-    public void limitVisionByCols(float cols) {
-        visionLimitColsLeft = Math.max(visionLimitColsLeft, cols);
+        statusEffectManager.applySlowDown(this, 1.5f);
     }
 
     public void limitVisionByMeters(float meters) {
-        limitVisionByCols(meters / 10f);
+        statusEffectManager.applyVisionLimitByMeters(this, meters);
     }
 
     public boolean isVisionLimited() {
-        return visionLimitTime > 0f || visionLimitColsLeft > 0f;
+        return statusEffectManager.isVisionLimited(this);
     }
 
+    public float getSlowDownTimeLeft() {
+        return slowDownTimeLeft;
+    }
+
+    public float getSlowDownFactor() {
+        return slowDownFactor;
+    }
+
+    public float getVisionLimitTime() {
+        return visionLimitTime;
+    }
+
+    public float getVisionLimitColsLeft() {
+        return visionLimitColsLeft;
+    }
+
+    // Stan podstawowy
+    public void kill() {
+        if (immortal) {
+            slowDown();
+        } else {
+            alive = false;
+        }
+    }
+
+    public void success() {
+        raceCompleted = true;
+    }
+
+    public void addCoins(int amount) {
+        coins += amount;
+    }
+
+    // Gettery
     public int getLane() {
         return lane;
     }
@@ -170,15 +186,33 @@ public class Player {
         return coins;
     }
 
-    public void kill() {
-        alive = false;
-    }
-
-    public void addCoins(int amount) {
-        coins += amount;
-    }
-
     public HorseType getHorseType() {
         return horseType;
     }
+
+    public SprintState getSprintState() {
+        return sprintState;
+    }
+
+    public boolean isRaceCompleted() {
+        return raceCompleted;
+    }
+
+    // Settery
+    public void setCol(float col) {
+        this.col = col;
+    }
+
+    public void setSlowDownTimeLeft(float slowDownTimeLeft) {
+        this.slowDownTimeLeft = slowDownTimeLeft;
+    }
+
+    public void setVisionLimitTime(float visionLimitTime) {
+        this.visionLimitTime = visionLimitTime;
+    }
+
+    public void setVisionLimitColsLeft(float visionLimitColsLeft) {
+        this.visionLimitColsLeft = visionLimitColsLeft;
+    }
 }
+

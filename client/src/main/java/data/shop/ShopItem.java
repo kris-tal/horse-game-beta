@@ -1,5 +1,6 @@
 package data.shop;
 
+
 import data.horse.HorseType;
 
 public class ShopItem {
@@ -15,13 +16,33 @@ public class ShopItem {
         this.upgrade = upgrade;
     }
 
-    public HorseType getHorseType() { return horseType; }
-    public int getId() { return horseType.getId(); }
-    public String getName() { return horseType.getName(); }
-    public String getAtlasKey() {return horseType.getAtlasKey();}
-    public int getPrice() { return price; }
-    public boolean isOwned() { return owned; }
-    public boolean isUpgrade() { return upgrade; }
+    public HorseType getHorseType() {
+        return horseType;
+    }
+
+    public int getId() {
+        return horseType.getId();
+    }
+
+    public String getName() {
+        return horseType.getName();
+    }
+
+    public String getAtlasKey() {
+        return horseType.getAtlasKey();
+    }
+
+    public int getPrice() {
+        return price;
+    }
+
+    public boolean isOwned() {
+        return owned;
+    }
+
+    public boolean isUpgrade() {
+        return upgrade;
+    }
 
     @Override
     public String toString() {

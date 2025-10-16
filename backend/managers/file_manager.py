@@ -3,9 +3,9 @@ import shutil
 from enum import Enum
 import json
 
-CONTENT_DIR = os.getenv("CONTENT_DIR")
+CONTENT_DIR = os.getenv("CONTENT_DIR", os.path.dirname(os.path.abspath(__file__)))
 
-USER_DATA_DIR = "../user_data"
+USER_DATA_DIR = "user_data"
 DEFAULT_DATA_DIR = "default"
 
 class DataType(Enum):

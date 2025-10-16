@@ -1,0 +1,136 @@
+{
+  "horses": [
+    {
+      "id": 1,
+      "key": "boring_horse",
+      "name": "Boring Horse",
+      "palette": {
+        "body": "#9e9283ff",
+        "mane": "#5d5549ff",
+        "tail": "#5d5549ff"
+      },
+      "color": "#5d5549ff"
+    },
+    {
+      "id": 2,
+      "key": "normal_horse",
+      "name": "Normal Horse (Average)",
+      "palette": {
+        "body": "#c9b998ff",
+        "mane": "#ccb07eff",
+        "tail": "#ccb07eff"
+      },
+      "color": "#ccb07eff"
+    },
+    {
+      "id": 3,
+      "key": "turing_machine",
+      "name": "Turing Machine",
+      "palette": {
+        "body": "#96c5deff",
+        "mane": "#7485d7ff",
+        "tail": "#7485d7ff"
+      },
+      "color": "#7485d7ff"
+    },
+    {
+      "id": 4,
+      "key": "rage",
+      "name": "Rage",
+      "palette": {
+        "body": "#ad3a1eff",
+        "mane": "#5d0000ff",
+        "tail": "#5d0000ff"
+      },
+      "color": "#ad3a1eff"
+    },
+    {
+      "id": 5,
+      "key": "pink_princess_ballerina",
+      "name": "Pink Princess Ballerina",
+      "palette": {
+        "body": "#e1c1c5ff",
+        "mane": "#c85a90ff",
+        "tail": "#c85a90ff"
+      },
+      "color": "#c85a90ff"
+    },
+    {
+      "id": 6,
+      "key": "ctrl_victory",
+      "name": "Ctrl+V(ictory)",
+      "palette": {
+        "body": "#ffa72cff",
+        "mane": "#d26487ff",
+        "tail": "#d26487ff"
+      },
+      "color": "#ffa72cff"
+    },
+    {
+      "id": 7,
+      "key": "probability_book",
+      "name": "Probability & Computing 2nd Edition",
+      "palette": {
+        "body": "#f0b61eff",
+        "mane": "#749fffff",
+        "tail": "#e673b9ff"
+      },
+      "color": "#749fffff"
+    },
+    {
+      "id": 8,
+      "key": "lana_del_rey",
+      "name": "Lana del Rey",
+      "palette": {
+        "body": "#d7c9acff",
+        "mane": "#7d2f2bff",
+        "tail": "#312619ff"
+      },
+      "color": "#7d2f2bff"
+    },
+    {
+      "id": 9,
+      "key": "silly",
+      "name": ":P",
+      "palette": {
+        "body": "#d0b888ff",
+        "mane": "#b68040ff",
+        "tail": "#b68040ff"
+      },
+      "color": "#b68040ff"
+    },
+    {
+      "id": 10,
+      "key": "saw",
+      "name": "Saw I (2004)",
+      "palette": {
+        "body": "#a2b4caff",
+        "mane": "#9d1f10ff",
+        "tail": "#9d1f10ff"
+      },
+      "color": "#9d1f10ff"
+    },
+    {
+      "id": 11,
+      "key": "piotr",
+      "name": "Piotr",
+      "palette": {
+        "body": "#b4c881ff",
+        "mane": "#7bc0a1ff",
+        "tail": "#7bc0a1ff"
+      },
+      "color": "#b4c881ff"
+    },
+    {
+      "id": 12,
+      "key": "horse",
+      "name": "Horse",
+      "palette": {
+        "body": "#948467ff",
+        "mane": "#533e2cff",
+        "tail": "#533e2cff"
+      },
+      "color": "#533e2cff"
+    }
+  ]
+}

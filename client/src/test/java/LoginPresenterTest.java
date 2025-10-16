@@ -1,33 +1,40 @@
+
+
 import data.auth.AuthCode;
 import data.auth.AuthResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import services.auth.AuthService;
+import services.managers.SessionManagerPort;
 import views.login.LoginPresenter;
 import views.login.LoginView;
 
 import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyString;
 
 class LoginPresenterTest {
 
     private LoginView view;
     private AuthService authService;
+    private SessionManagerPort sessionManager;
     private LoginPresenter presenter;
 
     @BeforeEach
     void setup() {
         view = mock(LoginView.class);
         authService = mock(AuthService.class);
-        presenter = new LoginPresenter(view, authService);
+        sessionManager = mock(SessionManagerPort.class);
+        presenter = new LoginPresenter(view, authService, sessionManager);
     }
 
     @Test
     void loginSuccess_navigateToRanch() {
-        var result = new AuthResult(AuthCode.SUCCESS, null);
+        var result = new AuthResult(AuthCode.SUCCESS, "token-123");
         when(authService.login("username", "password")).thenReturn(result);
 
         presenter.onLoginClicked("username", "password");
 
+        verify(sessionManager).startSession("token-123");
         verify(view).showLoginSuccess();
         verify(view).navigateToRanch();
         verify(view, never()).showLoginFailure();
@@ -40,6 +47,7 @@ class LoginPresenterTest {
 
         presenter.onLoginClicked("username", "password");
 
+        verify(sessionManager, never()).startSession(anyString());
         verify(view).showLoginFailure();
         verify(view, never()).showLoginSuccess();
         verify(view, never()).navigateToRanch();
@@ -52,6 +60,7 @@ class LoginPresenterTest {
 
         presenter.onLoginClicked("username", "password");
 
+        verify(sessionManager, never()).startSession(anyString());
         verify(view).showLoginFailure();
         verify(view, never()).showLoginSuccess();
         verify(view, never()).navigateToRanch();
@@ -64,6 +73,7 @@ class LoginPresenterTest {
 
         presenter.onLoginClicked("username", "password");
 
+        verify(sessionManager, never()).startSession(anyString());
         verify(view).showLoginFailure();
         verify(view, never()).showLoginSuccess();
         verify(view, never()).navigateToRanch();
@@ -76,6 +86,7 @@ class LoginPresenterTest {
 
         presenter.onLoginClicked("username", "password");
 
+        verify(sessionManager, never()).startSession(anyString());
         verify(view).showLoginFailure();
         verify(view, never()).showLoginSuccess();
         verify(view, never()).navigateToRanch();
@@ -88,6 +99,7 @@ class LoginPresenterTest {
 
         presenter.onLoginClicked("username", "password");
 
+        verify(sessionManager, never()).startSession(anyString());
         verify(view).showLoginFailure();
         verify(view, never()).showLoginSuccess();
         verify(view, never()).navigateToRanch();
@@ -100,6 +112,7 @@ class LoginPresenterTest {
 
         presenter.onLoginClicked("username", "password");
 
+        verify(sessionManager, never()).startSession(anyString());
         verify(view).showLoginFailure();
         verify(view, never()).showLoginSuccess();
         verify(view, never()).navigateToRanch();

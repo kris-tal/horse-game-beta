@@ -6,7 +6,7 @@ import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.ProgressBar;
 import race.Player;
-import views.common.UIFactory;
+import views.common.ui.UIFactory;
 
 public class SprintWidget extends Group {
 
@@ -35,10 +35,9 @@ public class SprintWidget extends Group {
     public void act(float delta) {
         super.act(delta);
 
-        //uppdating bar value directly from player sprint stats
         if (!waitingForSpace) {
             if (player.canSprint()) {
-                sprintBar.setValue(player.getSprintDuration()); // fully charged
+                sprintBar.setValue(player.getSprintDuration()); 
                 pressSpaceLabel.setVisible(true);
             } else if (player.isSprinting()) {
                 sprintBar.setValue(player.getSprintTimeLeft());
@@ -48,18 +47,15 @@ public class SprintWidget extends Group {
                 pressSpaceLabel.setVisible(false);
             }
         } else {
-            //draining mode after pressing space
             sprintBar.setValue(player.getSprintTimeLeft());
         }
 
-        //checking space key to activate sprint
         if (pressSpaceLabel.isVisible() && Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
             player.startSprint();
             waitingForSpace = true;
             pressSpaceLabel.setVisible(false);
         }
 
-        //resetting waitingForSpace when sprint ends
         if (waitingForSpace && !player.isSprinting()) {
             waitingForSpace = false;
         }

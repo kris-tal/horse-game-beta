@@ -14,21 +14,31 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.Scaling;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import core.HorseGame;
+import data.race.EquippedHorseService;
 import services.auth.AuthServiceImpl;
-import views.common.UIFactory;
-import views.common.UIStyles;
+import services.managers.ConnectionManagerPort;
 import services.managers.ResourceManager;
+import services.managers.SessionManager;
+import services.managers.SessionManagerPort;
+import services.media.AudioService;
+import views.common.ui.UIFactory;
 import views.login.LoginScreen;
 import views.ranch.RanchScreen;
 
 public class RegisterScreen implements Screen, RegisterView {
     private final HorseGame game;
     private final RegisterPresenter presenter;
+    private final SessionManagerPort sessionManager;
+    private final ConnectionManagerPort connectionManager;
+    private final AudioService audio;
     private Stage stage;
 
-    public RegisterScreen(HorseGame game) {
+    public RegisterScreen(HorseGame game, ConnectionManagerPort connectionManager, AudioService audio) {
         this.game = game;
-        this.presenter = new RegisterPresenter(this, new AuthServiceImpl());
+        this.sessionManager = new SessionManager();
+        this.connectionManager = connectionManager;
+        this.presenter = new RegisterPresenter(this, new AuthServiceImpl(), sessionManager);
+        this.audio = audio;
     }
 
     @Override
@@ -40,14 +50,11 @@ public class RegisterScreen implements Screen, RegisterView {
         float screenHeight = Gdx.graphics.getHeight();
 
         float bigPadding = screenHeight / 10f;
-        float mediumPadding = screenHeight / 20f;
         float smallPadding = screenHeight / 40f;
 
-        //loading assets
         Texture bgTexture = ResourceManager.authScreenBgTexture;
         Texture logoTexture = ResourceManager.logoTexture;
 
-        //staging bg
         Image background = new Image(bgTexture);
         background.setFillParent(true);
         stage.addActor(background);
@@ -56,17 +63,13 @@ public class RegisterScreen implements Screen, RegisterView {
         root.setFillParent(true);
         stage.addActor(root);
 
-        //staging logo
         Image logo = new Image(logoTexture);
         logo.setScaling(Scaling.fit);
         float logoWidth = screenWidth / 2f;
         float logoHeight = logoTexture.getHeight() * (logoWidth / logoTexture.getWidth());
 
-        //username / password field
         TextField usernameField = UIFactory.createTextField("username");
-
         TextField passwordField = UIFactory.createTextField("password");
-
         passwordField.setPasswordMode(true);
         passwordField.setPasswordCharacter('*');
 
@@ -74,7 +77,6 @@ public class RegisterScreen implements Screen, RegisterView {
         repeatPasswordField.setPasswordMode(true);
         repeatPasswordField.setPasswordCharacter('*');
 
-        //register button
         TextButton registerButton = UIFactory.createTextButton("register!");
         registerButton.addListener(new ClickListener() {
             @Override
@@ -106,21 +108,16 @@ public class RegisterScreen implements Screen, RegisterView {
             }
         });
 
-        // Jesteśmy w polu username + klikamy Enter = skaczemy do pola password
         usernameField.setTextFieldListener((textField, c) -> {
             if (c == '\r' || c == '\n') {
                 textField.getStage().setKeyboardFocus(passwordField);
             }
         });
-
-        // Jesteśmy w polu password + klikamy Enter = skaczemy do pola repeat_password
         passwordField.setTextFieldListener((textField, c) -> {
             if (c == '\r' || c == '\n') {
                 textField.getStage().setKeyboardFocus(repeatPasswordField);
             }
         });
-
-        // Jesteśmy w polu repeat_password + klikamy Enter = próba rejestracji
         repeatPasswordField.setTextFieldListener((textField, c) -> {
             if (c == '\r' || c == '\n') {
                 presenter.onRegisterClicked(usernameField.getText(), passwordField.getText(), repeatPasswordField.getText());
@@ -130,7 +127,6 @@ public class RegisterScreen implements Screen, RegisterView {
         float fieldWidth = Gdx.graphics.getWidth() / 3f;
         float fieldHeight = Gdx.graphics.getHeight() / 20f;
 
-        //layout
         root.top();
         root.padTop(bigPadding);
         root.add(logo).width(logoWidth).height(logoHeight).padBottom(bigPadding).row();
@@ -141,33 +137,30 @@ public class RegisterScreen implements Screen, RegisterView {
         root.add(loginLabel).width(fieldWidth).padTop(smallPadding).row();
     }
 
-    // LoginView methods
     @Override
-    public void showRegisterFailure() {
-        ResourceManager.snortSound.play();
+    public void showRegisterSuccess() {
+        audio.playSuccessSound();
     }
 
     @Override
-    public void showRegisterSuccess() {
-        ResourceManager.horseSound1.play();
+    public void showRegisterFailure() {
+        audio.playFailureSound();
     }
 
     @Override
     public void navigateToLogin() {
-        game.setScreen(new LoginScreen(game));
+        game.setScreen(new LoginScreen(game, connectionManager, audio));
     }
 
     @Override
     public void navigateToRanch() {
-        game.setScreen(new RanchScreen(game));
+        game.setScreen(new RanchScreen(game, sessionManager, connectionManager, new EquippedHorseService(sessionManager)));
     }
 
     @Override
     public void exitGame() {
         Gdx.app.exit();
     }
-
-    // LibGDX things
 
     @Override
     public void render(float delta) {
@@ -184,13 +177,16 @@ public class RegisterScreen implements Screen, RegisterView {
     }
 
     @Override
-    public void pause() {}
+    public void pause() {
+    }
 
     @Override
-    public void resume() {}
+    public void resume() {
+    }
 
     @Override
-    public void hide() {}
+    public void hide() {
+    }
 
     @Override
     public void dispose() {

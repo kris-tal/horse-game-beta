@@ -21,10 +21,10 @@ DEFAULT_HORSE_TYPES = [
 
 
 def initialize():
-    # seed defaults if not present
     if not HorseTypes.query.first():
         for horse in DEFAULT_HORSE_TYPES:
             db.session.add(HorseTypes(**horse))
+        db.session.commit()
 
     shop_path = os.path.join(CONTENT_DIR, DEFAULT_DATA_DIR, DEFAULT_FILES[DataType.Shop])
     if not os.path.exists(shop_path):

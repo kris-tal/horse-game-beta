@@ -1,8 +1,11 @@
+
+
 import data.auth.AuthCode;
 import data.auth.AuthResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import services.auth.AuthService;
+import services.managers.SessionManagerPort;
 import views.register.RegisterPresenter;
 import views.register.RegisterView;
 
@@ -12,13 +15,15 @@ class RegisterPresenterTest {
 
     private RegisterView view;
     private AuthService authService;
+    private SessionManagerPort sessionManager;
     private RegisterPresenter presenter;
 
     @BeforeEach
     void setup() {
         view = mock(RegisterView.class);
         authService = mock(AuthService.class);
-        presenter = new RegisterPresenter(view, authService);
+        sessionManager = mock(SessionManagerPort.class);
+        presenter = new RegisterPresenter(view, authService, sessionManager);
     }
 
     @Test
@@ -27,6 +32,7 @@ class RegisterPresenterTest {
 
         verify(view).showRegisterFailure();
         verifyNoMoreInteractions(view);
+        verifyNoInteractions(sessionManager);
     }
 
     @Test
@@ -39,6 +45,7 @@ class RegisterPresenterTest {
         verify(view).showRegisterFailure();
         verify(view, never()).showRegisterSuccess();
         verify(view, never()).navigateToRanch();
+        verifyNoInteractions(sessionManager);
     }
 
     @Test
@@ -51,6 +58,7 @@ class RegisterPresenterTest {
         verify(view).showRegisterFailure();
         verify(view, never()).showRegisterSuccess();
         verify(view, never()).navigateToRanch();
+        verifyNoInteractions(sessionManager);
     }
 
     @Test
@@ -63,6 +71,7 @@ class RegisterPresenterTest {
         verify(view).showRegisterFailure();
         verify(view, never()).showRegisterSuccess();
         verify(view, never()).navigateToRanch();
+        verifyNoInteractions(sessionManager);
     }
 
     @Test
@@ -75,6 +84,7 @@ class RegisterPresenterTest {
         verify(view).showRegisterFailure();
         verify(view, never()).showRegisterSuccess();
         verify(view, never()).navigateToRanch();
+        verifyNoInteractions(sessionManager);
     }
 
     @Test
@@ -87,6 +97,7 @@ class RegisterPresenterTest {
         verify(view).showRegisterFailure();
         verify(view, never()).showRegisterSuccess();
         verify(view, never()).navigateToRanch();
+        verifyNoInteractions(sessionManager);
     }
 
     @Test
@@ -96,6 +107,7 @@ class RegisterPresenterTest {
 
         presenter.onRegisterClicked("username", "password", "password");
 
+        verify(sessionManager).startSession("reg-token");
         verify(view).showRegisterSuccess();
         verify(view).navigateToRanch();
         verify(view, never()).showRegisterFailure();

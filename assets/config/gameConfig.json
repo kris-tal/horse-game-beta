@@ -1,0 +1,13 @@
+{
+  "gameConfig": {
+    "defaultLanes": 3,
+    "raceLength": 3000,
+    "trainingLength": 300000,
+    "defaultSpeed": 4.0,
+    "defaultVisibleCols": 10,
+    "trainingPointsMultiplier": 0.0001,
+    "sprintLevelMultiplier": 0.1,
+    "defaultSprint": 2.0,
+    "defaultSprintCooldown": 10.0
+  }
+}

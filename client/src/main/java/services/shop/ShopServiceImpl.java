@@ -1,10 +1,10 @@
 package services.shop;
 
-import com.badlogic.gdx.Gdx;
 import com.google.gson.Gson;
 import data.shop.PurchaseResult;
+import data.shop.PurchaseType;
 import data.shop.ShopResponse;
-import services.managers.SessionManager;
+import services.managers.SessionManagerPort;
 
 import java.io.IOException;
 import java.net.http.HttpRequest;
@@ -15,21 +15,21 @@ import java.util.Map;
 public class ShopServiceImpl implements ShopService {
 
     private final Gson gson;
+    private final SessionManagerPort sessionManager;
 
-    public ShopServiceImpl() {
+    public ShopServiceImpl(SessionManagerPort sessionManager) {
         this.gson = new Gson();
+        this.sessionManager = sessionManager;
     }
 
     @Override
     public ShopResponse getShopData() {
-        HttpRequest request = SessionManager.getInstance()
-                .getProtectedRequestsService()
+        HttpRequest request = sessionManager.getProtectedRequestsService()
                 .ProtectedGet("/shop")
                 .build();
 
         try {
-            HttpResponse<String> response = SessionManager.getInstance()
-                    .getProtectedRequestsService()
+            HttpResponse<String> response = sessionManager.getProtectedRequestsService()
                     .GetHttpClient()
                     .send(request, HttpResponse.BodyHandlers.ofString());
 
@@ -44,37 +44,37 @@ public class ShopServiceImpl implements ShopService {
 
     @Override
     public PurchaseResult postHorsePurchase(int horseId) {
-        return sendPurchaseRequest(horseId);
+        return sendPurchaseRequest(horseId, PurchaseType.HORSE);
     }
 
     @Override
     public PurchaseResult postUpgradePurchase(int horseId) {
-        return sendPurchaseRequest(horseId);
+        return sendPurchaseRequest(horseId, PurchaseType.UPGRADE);
     }
 
-    private PurchaseResult sendPurchaseRequest(int horseId) {
+
+    private PurchaseResult sendPurchaseRequest(int horseId, PurchaseType type) {
         String requestBody = gson.toJson(Map.of("id", horseId));
 
-        Gdx.app.log("purchase", requestBody);
-        HttpRequest request = SessionManager.getInstance()
-                .getProtectedRequestsService()
+        HttpRequest request = sessionManager.getProtectedRequestsService()
                 .ProtectedPost("/shop",
                         HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8))
                 .build();
 
         try {
-            HttpResponse<String> response = SessionManager.getInstance()
-                    .getProtectedRequestsService()
+            HttpResponse<String> response = sessionManager.getProtectedRequestsService()
                     .GetHttpClient()
                     .send(request, HttpResponse.BodyHandlers.ofString());
 
-            if (response.statusCode() == 200 || response.statusCode() == 400
-                    || response.statusCode() == 401 || response.statusCode() == 404) {
-                return gson.fromJson(response.body(), PurchaseResult.class);
+            int status = response.statusCode();
+            if (status == 200 || status == 400 || status == 401 || status == 404) {
+                PurchaseResult result = gson.fromJson(response.body(), PurchaseResult.class);
+                return new PurchaseResult(result.getMoney(), result.isSuccess(), result.getMessage(), type == PurchaseType.UPGRADE);
             }
         } catch (IOException | InterruptedException e) {
-            return new PurchaseResult(0, false, "Request failed: " + e.getMessage());
+            return new PurchaseResult(0, false, "Request failed: " + e.getMessage(), type == PurchaseType.UPGRADE);
         }
-        return new PurchaseResult(0, false, "Unknown error");
+        return new PurchaseResult(0, false, "Unknown error", type == PurchaseType.UPGRADE);
     }
+
 }

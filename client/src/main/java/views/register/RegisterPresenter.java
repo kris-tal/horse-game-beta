@@ -2,15 +2,17 @@ package views.register;
 
 import data.auth.AuthCode;
 import services.auth.AuthService;
-import services.managers.SessionManager;
+import services.managers.SessionManagerPort;
 
 public class RegisterPresenter {
     private final RegisterView view;
     private final AuthService authService;
+    private final SessionManagerPort sessionManager;
 
-    public RegisterPresenter(RegisterView view, AuthService authService) {
+    public RegisterPresenter(RegisterView view, AuthService authService, SessionManagerPort sessionManager) {
         this.view = view;
         this.authService = authService;
+        this.sessionManager = sessionManager;
     }
 
     public void onRegisterClicked(String username, String password, String passwordRepeated) {
@@ -22,7 +24,7 @@ public class RegisterPresenter {
         if (result.returnedCode != AuthCode.SUCCESS) {
             view.showRegisterFailure();
         } else {
-            SessionManager.getInstance().startSession(result.token);
+            sessionManager.startSession(result.token);
             view.showRegisterSuccess();
             view.navigateToRanch();
         }

@@ -1,12 +1,11 @@
 package views.ranch.race;
 
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import views.common.MenuContext;
-import views.common.Panel;
-import views.common.UIFactory;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import views.common.context.MenuContext;
+import views.common.ui.Panel;
+import views.common.ui.UIFactory;
 
 public class RaceMenuPanel extends Panel {
     public interface RaceMenuListener {
@@ -17,6 +16,7 @@ public class RaceMenuPanel extends Panel {
 
     public RaceMenuPanel(float width, float height) {
         super(width, height);
+        super.build();
     }
 
     @Override

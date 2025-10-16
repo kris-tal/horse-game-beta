@@ -101,13 +101,35 @@ def start_room(code):
     data, status = get_user(identity)
     if status != 200:
         return data, status
+
     room = rooms.get(code)
     if not room:
         return jsonify({"error": "Room not found"}), 404
+
     if room["created_by"] != identity:
         return jsonify({"error": "Only host can start the room"}), 403
+
+    request_data = request.get_json()
+    map_data = None
+
+    if request_data and 'map_data' in request_data:
+        map_data = request_data['map_data']
+        # Log the efficiency improvement!
+        if map_data:
+            import json
+            parsed = json.loads(map_data)
+            if 'map_data' in parsed:
+                current_app.logger.info(f"Compact map for room {code}: {len(parsed['map_data'])} chars")
+
     room["status"] = RoomStatus.Started
-    log_and_emit("room_started", {"room": code}, to=code)
+
+    emission_data = {
+        "room": code,
+        "map_data": map_data
+    }
+
+    log_and_emit("room_started", emission_data, to=code)
+
     return jsonify({"message": "Room started"}), 200
 
 @socketio.on("connect")
@@ -153,19 +175,20 @@ def progress_update(data):
         return
 
     for player in room["players"]:
-        if player.id == user.id:
-            player.progress = min(max(progress, 0), 100)
-            break
+        if player.username == user.username:
+            player.progress = min(max(progress, 0), 3000)
+
+    log_and_emit("progress_update", {"distances": [{"username": p.username, "progress": p.progress} for p in room["players"]]}, to=room_code)
 
     if room["winner"] is None:
         for player in room["players"]:
-            if player.progress >= 100:
+            if player.progress >= 3000:
                 room["winner"] = player.id
                 room["status"] = RoomStatus.Finished
                 log_and_emit("game_won", {"winner": player.serialize()}, to=room_code)
+                del room
                 return
 
-    log_and_emit("progress_update", {"players": [p.serialize() for p in room["players"]]}, to=room_code)
 
 @socketio.on("disconnect")
 def disconnect_handler():

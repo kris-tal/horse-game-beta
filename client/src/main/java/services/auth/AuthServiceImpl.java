@@ -1,13 +1,16 @@
 package services.auth;
 
-import com.badlogic.gdx.Gdx;
+import com.google.gson.Gson;
 import data.auth.AuthCode;
 import data.auth.AuthResult;
+
 import java.net.URI;
-import java.net.http.*;
-import java.time.Duration;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
-import com.google.gson.Gson;
+import java.time.Duration;
 import java.util.Map;
 
 public class AuthServiceImpl implements AuthService {
@@ -15,8 +18,10 @@ public class AuthServiceImpl implements AuthService {
     private final HttpClient client;
     private String authToken;
 
-    // Move these as static per-game connection parameters (Maybe perhaps select url during launch?)
-    public static final String BASE_URL = "http://localhost:4000";// tutaj dajemy to na czym pracuje nasz flask
+    public static final String BASE_URL = System.getProperty(
+            "backend.baseUrl",
+            System.getenv().getOrDefault("BACKEND_BASE_URL", "http://127.0.0.1:4000")
+    );
     public static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(15);
 
 
@@ -91,19 +96,11 @@ public class AuthServiceImpl implements AuthService {
                     .POST(HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8))
                     .build();
 
-            Gdx.app.log("DEBUG", "===[DEBUG] Sending request to /signup ===");
-            Gdx.app.log("DEBUG", "URI: " + request.uri());
-            Gdx.app.log("DEBUG", "Headers: " + request.headers().map());
-            Gdx.app.log("DEBUG", "Body: " + requestBody);
-
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-            Gdx.app.log("DEBUG", "===[DEBUG] Received response ===");
-            Gdx.app.log("DEBUG", "Status code: " + response.statusCode());
-            Gdx.app.log("DEBUG", "Response body: " + response.body());
-
             return switch (response.statusCode()) {
-                case 201 -> new AuthResult(AuthCode.SUCCESS, (String) gson.fromJson(response.body(), Map.class).get("token"));
+                case 201 ->
+                        new AuthResult(AuthCode.SUCCESS, (String) gson.fromJson(response.body(), Map.class).get("token"));
                 case 409 -> new AuthResult(AuthCode.USERNAME_TAKEN, null);
                 case 400 -> new AuthResult(AuthCode.INVALID_INPUT, null);
                 default -> new AuthResult(AuthCode.SERVER_ERROR, null);
@@ -115,7 +112,6 @@ public class AuthServiceImpl implements AuthService {
             Thread.currentThread().interrupt();
             return new AuthResult(AuthCode.INTERRUPTED, null);
         } catch (Exception e) {
-            Gdx.app.log("DEBUG", "Exception: " + e.getMessage());
             return new AuthResult(AuthCode.SERVER_ERROR, null);
         }
     }

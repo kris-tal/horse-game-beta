@@ -19,8 +19,6 @@ public class ResourceManager {
     public static final String RANCH_SCREEN_BG_PATH = "images/background/bg.png";
     public static final String RACE_SCREEN_BG_PATH = "images/background/race_screen_background.png";
     public static final String LOGO_PATH = "images/other/logo.png";
-    public static final String UI_TEXTURE_PATH_ATLAS = "skins/uiskin.atlas";
-    public static final String UI_SKIN_PATH = "skins/uiskin.json";
     public static final String HORSE_SOUND1_PATH = "sounds/horse_sound1.wav";
     public static final String SNORT_SOUND_PATH = "sounds/snort.wav";
     public static final String UI_ATLAS_PATH = "ui/ui.atlas";
@@ -55,8 +53,6 @@ public class ResourceManager {
         assetManager.load(RANCH_SCREEN_BG_PATH, Texture.class);
         assetManager.load(RACE_SCREEN_BG_PATH, Texture.class);
         assetManager.load(LOGO_PATH, Texture.class);
-        assetManager.load(UI_SKIN_PATH, Skin.class);
-        assetManager.load(UI_TEXTURE_PATH_ATLAS, TextureAtlas.class);
         assetManager.load(HORSE_SOUND1_PATH, Sound.class);
         assetManager.load(SNORT_SOUND_PATH, Sound.class);
         assetManager.load(UI_ATLAS_PATH, TextureAtlas.class);
@@ -73,8 +69,6 @@ public class ResourceManager {
         ranchScreenBgTexture = assetManager.get(RANCH_SCREEN_BG_PATH, Texture.class);
         raceScreenBgTexture = assetManager.get(RACE_SCREEN_BG_PATH, Texture.class);
         logoTexture = assetManager.get(LOGO_PATH, Texture.class);
-        uiSkin = assetManager.get(UI_SKIN_PATH, Skin.class);
-        uiTextureAtlas = assetManager.get(UI_TEXTURE_PATH_ATLAS, TextureAtlas.class);
         horseSound1 = assetManager.get(HORSE_SOUND1_PATH, Sound.class);
         snortSound = assetManager.get(SNORT_SOUND_PATH, Sound.class);
         uiAtlas = assetManager.get(UI_ATLAS_PATH, TextureAtlas.class);
@@ -102,7 +96,6 @@ public class ResourceManager {
         if (assetManager.isLoaded(path)) {
             return assetManager.get(path, Texture.class);
         }
-        Gdx.app.log("ResourceManager", "Texture not loaded: " + path);
         return null;
     }
 
@@ -117,7 +110,6 @@ public class ResourceManager {
         if (assetManager.isLoaded(path)) {
             return assetManager.get(path, Skin.class);
         }
-        Gdx.app.log("ResourceManager", "Skin not loaded: " + path);
         return null;
     }
 
